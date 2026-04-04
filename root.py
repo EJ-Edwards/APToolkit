@@ -1,8 +1,12 @@
+import sys
+import os
 from chat import start_chat, start_server
 from tos import TOS_TEXT, print_tos
-from exploits.dos import DoSAttack
-from exploits.keylogger import start_keylogger
 
+# Add project subfolders to path so imports work correctly
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "chat"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "tos"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "exploits"))
 
 def get_host_port():
     host = input("Host [127.0.0.1]: ").strip() or "127.0.0.1"
@@ -50,14 +54,13 @@ def chat_menu():
             print("Invalid option. Try again.")
 
 
-
-
 def exploits_menu():
     while True:
         print("\n Exploits Menu")
         print("1. DoS Attack")
         print("2. Keylogger")
-        print("3. Back to Main Menu")
+        print("3. Port Scanner")
+        print("4. Back to Main Menu")
         choice = input("Select an option: ").strip()
         if choice == "1":
             from exploits.dos import DoSAttack
@@ -67,11 +70,15 @@ def exploits_menu():
             from exploits.keylogger import start_keylogger
             start_keylogger()
         elif choice == "3":
+            try:
+                import portscanner
+                portscanner.run_scanner()
+            except ImportError:
+                print("[!] Error: Portscanner.py not found in exploits folder.")
+        elif choice == "4":
             break
         else:
             print("Invalid option. Try again.")
-
-
 
 
 if __name__ == "__main__":
