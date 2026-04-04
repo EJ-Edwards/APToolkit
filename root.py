@@ -60,7 +60,8 @@ def exploits_menu():
         print("1. DoS Attack")
         print("2. Keylogger")
         print("3. Port Scanner")
-        print("4. Back to Main Menu")
+        print("4. RAT")
+        print("5. Back to Main Menu")
         choice = input("Select an option: ").strip()
         if choice == "1":
             from exploits.dos import DoSAttack
@@ -76,6 +77,12 @@ def exploits_menu():
             except ImportError:
                 print("[!] Error: Portscanner.py not found in exploits folder.")
         elif choice == "4":
+            try:
+                import rat
+                rat.start_rat()
+            except ImportError:
+                print("[!] Error: RAT.py not found in exploits folder.")
+        elif choice == "5":
             break
         else:
             print("Invalid option. Try again.")
