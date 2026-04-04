@@ -31,5 +31,6 @@ APTToolkit is designed for:
 
 Discord contact: ejdev21
 
+**Contribute**
 
 (https://github.com/EJ-Edwards/APToolkit/blob/main/Contribute.md)
