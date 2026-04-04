@@ -32,5 +32,4 @@ APTToolkit is designed for:
 Discord contact: ejdev21
 
 
-
-[Instructions on how to contribute - e.g., Code of Conduct, pull request guidelines]
+(https://github.com/EJ-Edwards/APToolkit/blob/main/Contribute.md)
