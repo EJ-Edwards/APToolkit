@@ -110,8 +110,9 @@ def exploits_menu():
         print("1. DoS Attack")
         print("2. Keylogger")
         print("3. Port Scanner")
-        print("4. RAT")
-        print("5. Back to Main Menu")
+        print("4. RAT Server")
+        print("5. RAT Client")
+        print("6. Back to Main Menu")
         choice = input("Select an option: ").strip()
         
         if choice == "1":
@@ -134,6 +135,12 @@ def exploits_menu():
             except ImportError:
                 print("[!] Error: rat.py not found in exploits folder.")
         elif choice == "5":
+            try:
+                import server
+                server.start_server()
+            except ImportError:
+                print("[!] Error: server.py not found in exploits folder.")
+        elif choice == "6":
             break
         else:
             print("Invalid option. Try again.")
