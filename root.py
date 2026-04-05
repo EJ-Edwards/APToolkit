@@ -140,6 +140,8 @@ def exploits_menu():
                 server.start_server()
             except ImportError:
                 print("[!] Error: server.py not found in exploits folder.")
+        elif choice == "6":
+            break
         else:
             print("Invalid option. Try again.")
 
