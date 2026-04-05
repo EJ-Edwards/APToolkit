@@ -4,7 +4,7 @@
 # This script installs APToolkit and provides update notifications
 
 # Configuration
-REPO_URL="https://github.com/EJ-Edwards/APToolkit.git"
+REPO_URL="https://github.com/EJ-Edwards/APToolkit/blob/main/APToolkit.git"
 INSTALL_DIR="$HOME/.APToolkit"
 BIN_DIR="$HOME/.local/bin"
 DESKTOP_DIR="$HOME/.local/share/applications"
