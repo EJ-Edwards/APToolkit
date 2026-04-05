@@ -20,14 +20,17 @@ def main():
     while True:
         print("\n APToolkit Main Menu")
         print("1. exploits")
-        print("2. chat")
-        print("3. exit")
+        print("2. C2(Command and Control)")
+        print("3. chat")
+        print("4. exit")
         choice = input("Select an option: ").strip()
         if choice == "1":
             exploits_menu()
         elif choice == "2":
-            chat_menu()
+            c2_menu()
         elif choice == "3":
+            chat_menu()
+        elif choice == "4":
             print("Goodbye!")
             break
         else:
