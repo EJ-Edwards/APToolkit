@@ -12,6 +12,16 @@ APTToolkit is a cybersecurity toolkit designed to emulate Advanced Persistent Th
 *   **This toolkit is *not* intended for malicious activities.**  Using it to cause destruction, damage, or disruption is strictly prohibited.
 *   **Understanding Ethical Hacking:**  It’s crucial to understand the ethical implications of using this toolkit and to operate within legal and responsible boundaries.
 
+**Instaliation**
+
+**How to install APToolkit**
+
+* **1. Git clone it https://github.com/EJ-Edwards/APToolkit.git**
+* **2. Run chmod +x install.sh and then ./install.sh**
+* **3. Crucial: Run source ~/.bashrc**
+* **4. Type APToolkit. You should see the Main Menu pop up in your terminal.** 
+
+
 **Intended Use**
 
 APTToolkit is designed for:
