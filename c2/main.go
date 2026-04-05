@@ -1,12 +1,11 @@
 package c2
 
 import (
+	"c2"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
-
-	"c2" // Import the module we just created
 )
 
 func main() {
