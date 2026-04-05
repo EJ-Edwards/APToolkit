@@ -1,7 +1,7 @@
-package c2
+package main
 
 import (
-	"c2"
+	"APToolkit/c2"
 	"log"
 	"os"
 	"os/signal"
