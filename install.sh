@@ -1,163 +1,70 @@
 #!/bin/bash
 
-# APToolkit Auto-Installer and Updater
-# This script installs APToolkit and provides update notifications
-
-# Configuration - FIXED: Correct Git URL
+# Configuration
 REPO_URL="https://github.com/EJ-Edwards/APToolkit.git"
 INSTALL_DIR="$HOME/.APToolkit"
 BIN_DIR="$HOME/.local/bin"
-DESKTOP_DIR="$HOME/.local/share/applications"
-UPDATE_CHECK_INTERVAL=7  # days
-LAST_UPDATE_FILE="$INSTALL_DIR/.last_update"
 
-# Colors for output
-RED='\033[0;31m'
+# Colors
 GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+RED='\033[0;31m'
+NC='\033[0m'
 
-# Function to print colored output
 print_status() { echo -e "${GREEN}[INFO]${NC} $1"; }
-print_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
 print_error() { echo -e "${RED}[ERROR]${NC} $1"; }
-print_header() {
-    echo -e "${BLUE}================================${NC}"
-    echo -e "${BLUE}$1${NC}"
-    echo -e "${BLUE}================================${NC}"
-}
 
-command_exists() { command -v "$1" >/dev/null 2>&1; }
-
-# Function to install dependencies and setup Venv
-install_dependencies() {
-    print_status "Checking and installing system dependencies..."
+install_toolkit() {
+    print_status "Starting Hybrid Install (Go + Python)..."
     
-    if command_exists apt-get; then
-        sudo apt-get update
-        sudo apt-get install -y git python3 python3-pip python3-venv
-    elif command_exists dnf; then
-        sudo dnf install -y git python3 python3-pip
-    elif command_exists pacman; then
-        sudo pacman -Sy --noconfirm git python python-pip
-    else
-        print_warning "Ensure git, python3, and venv are installed manually."
-    fi
-    
-    # Setup Virtual Environment - Best Practice
-    print_status "Setting up Python virtual environment..."
-    python3 -m venv "$INSTALL_DIR/venv"
-    
-    if [ -f "$INSTALL_DIR/requirements.txt" ]; then
-        print_status "Installing Python requirements..."
-        "$INSTALL_DIR/venv/bin/pip" install --upgrade pip
-        "$INSTALL_DIR/venv/bin/pip" install -r "$INSTALL_DIR/requirements.txt"
-    else
-        print_warning "No requirements.txt found."
-    fi
-}
-
-create_desktop_entry() {
-    mkdir -p "$DESKTOP_DIR"
-    cat > "$DESKTOP_DIR/APToolkit.desktop" << EOF
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=APToolkit
-Comment=Android Pentesting Toolkit
-Exec=$BIN_DIR/APToolkit
-Icon=$INSTALL_DIR/icon.png
-Terminal=true
-Categories=Security;Development;
-EOF
-    chmod +x "$DESKTOP_DIR/APToolkit.desktop"
-    print_status "Desktop entry created"
-}
-
-install_APToolkit() {
-    print_header "Installing APToolkit"
-    
-    mkdir -p "$INSTALL_DIR"
-    
-    if [ -d "$INSTALL_DIR/.git" ]; then
-        print_status "Repository exists. Updating..."
-        cd "$INSTALL_DIR" && git pull origin main
-    else
-        print_status "Cloning repository..."
+    # 1. Setup Directory
+    if [ ! -d "$INSTALL_DIR" ]; then
         git clone "$REPO_URL" "$INSTALL_DIR"
     fi
-    
-    install_dependencies
-    
-    # Create executable wrapper - FIXED: Uses Venv Python
+    cd "$INSTALL_DIR" || exit
+
+    # 2. Install System Dependencies (Added 'golang')
+    print_status "Installing system dependencies..."
+    if command -v apt-get &>/dev/null; then
+        sudo apt-get update
+        sudo apt-get install -y git python3 python3-pip python3-venv golang-go
+    else
+        print_error "Please ensure 'go' and 'python3-venv' are installed manually."
+    fi
+
+    # 3. Build the Go C2 Server
+    print_status "Compiling Go C2 Server..."
+    if command -v go &>/dev/null; then
+        go mod tidy 2>/dev/null
+        go build -o c2server main.go
+        print_status "C2 Binary created successfully."
+    else
+        print_error "Go compiler not found. C2 features will not work."
+    fi
+
+    # 4. Setup Python Virtual Env
+    print_status "Setting up Python environment..."
+    python3 -m venv venv
+    # Installing common dependencies since requirements.txt is missing
+    ./venv/bin/pip install --upgrade pip
+    ./venv/bin/pip install requests pynput 2>/dev/null
+
+    # 5. Create the Execution Wrapper (Pointing to root.py)
     mkdir -p "$BIN_DIR"
     cat > "$BIN_DIR/APToolkit" << EOF
 #!/bin/bash
 cd "$INSTALL_DIR"
-"$INSTALL_DIR/venv/bin/python3" APToolkit.py "\$@"
+# Run the root.py using the virtual environment
+"$INSTALL_DIR/venv/bin/python3" root.py "\$@"
 EOF
     chmod +x "$BIN_DIR/APToolkit"
-    
-    # Add to PATH (only if not present)
+
+    # 6. Finalize PATH
     if [[ ":$PATH:" != *":$BIN_DIR:"* ]]; then
-        if ! grep -q "$BIN_DIR" "$HOME/.bashrc"; then
-            echo "export PATH=\"\$PATH:$BIN_DIR\"" >> "$HOME/.bashrc"
-            print_status "Added $BIN_DIR to PATH in .bashrc. Restart terminal or run 'source ~/.bashrc'"
-        fi
+        echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.bashrc"
+        print_status "Added to PATH. Please run: source ~/.bashrc"
     fi
-    
-    create_desktop_entry
-    date +%s > "$LAST_UPDATE_FILE"
-    print_status "Installation completed successfully!"
+
+    print_status "Done! Type 'APToolkit' to launch."
 }
 
-check_for_updates() {
-    if [ ! -d "$INSTALL_DIR/.git" ]; then
-        print_error "APToolkit is not installed."
-        exit 1
-    fi
-
-    cd "$INSTALL_DIR" || exit
-    print_status "Checking for updates..."
-    git fetch origin main
-    
-    LOCAL=$(git rev-parse HEAD)
-    REMOTE=$(git rev-parse origin/main)
-    
-    if [ "$LOCAL" != "$REMOTE" ]; then
-        print_warning "A new version is available!"
-        read -p "Update now? (y/n): " -n 1 -r
-        echo ""
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            git pull origin main
-            install_dependencies
-            print_status "Updated successfully."
-        fi
-    else
-        print_status "Already up to date."
-    fi
-    date +%s > "$LAST_UPDATE_FILE"
-}
-
-uninstall_APToolkit() {
-    print_header "Uninstalling APToolkit"
-    read -p "Are you sure? (y/n): " -n 1 -r
-    echo ""
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        rm -rf "$INSTALL_DIR"
-        rm -f "$BIN_DIR/APToolkit"
-        rm -f "$DESKTOP_DIR/APToolkit.desktop"
-        print_status "Uninstalled."
-    fi
-}
-
-case "$1" in
-    install)   install_APToolkit ;;
-    update)    check_for_updates ;;
-    uninstall) uninstall_APToolkit ;;
-    *)
-        echo "Usage: $0 {install|update|uninstall}"
-        exit 1
-        ;;
-esac
+install_toolkit
